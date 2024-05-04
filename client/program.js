@@ -73,7 +73,7 @@ async function uploadImage() {
 }    
 
 connect();
-socket.on('give-img', () => {
+socket.on('give-image', () => {
     console.log("SHA");
 });
 
