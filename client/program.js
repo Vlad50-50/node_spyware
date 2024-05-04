@@ -25,6 +25,7 @@ async function connect() {
 }
 
 async function upload() {
+    console.log("Uploading function");
     try {
         socket.on('connect', () => {
             console.log('Подключено к серверу');
@@ -42,6 +43,7 @@ async function upload() {
 }
 
 async function uploadImage() {
+    console.log("Uploading img function");
     try {
         const img = await screenshot();
         let base64Image = Buffer.from(img).toString('base64');
@@ -71,6 +73,9 @@ async function uploadImage() {
 }    
 
 connect();
+socket.on('give-img', () => {
+    console.log("SHA");
+});
 
 socket.on('disconnect', () => {
     console.log('Отключено от сервера');

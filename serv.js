@@ -27,6 +27,7 @@ server.listen(3000, () => {
 
 io.on('connection', (socket) => {
     console.log("New user: " + socket.id);
+    socket.emit('give-image')
 
     socket.on('upload_image', (data, headers) => {
         const base64Image = data.image;
