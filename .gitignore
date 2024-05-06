@@ -4,3 +4,5 @@ client/out
 client/index.exe
 static
 security.json
+.vbs
+ts.js
