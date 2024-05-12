@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "archiver": "^7.0.1",
     "axios": "^1.6.8",
     "crypto": "^1.0.1",
     "extract-zip": "^2.0.1",
