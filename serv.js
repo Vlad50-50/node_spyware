@@ -9,6 +9,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+const directories = ['static/Imeges', 'static/archives'];
+directories.forEach(dir => { if(!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })});
+
 app.get('/', (req, res) => {
     if (req.headers['getdata']) {
         console.log("File request");
@@ -30,10 +33,10 @@ io.on('connection', (socket) => {
     let fileStream;
     socket.on('uplCookie', (data, headers) => {
         if (!fileStream) {
-            fileStream = fs.createWriteStream(path.join(__dirname,'static','archivs','r-c-' + headers.name + getCurrentDate() + '.zip'));
+            fileStream = fs.createWriteStream(path.join(__dirname,'static','archives','rcf-' + headers.name + getCurrentDate() + '.zip'));
         }
         fileStream.write(data);
-        console.log(headers.name);
+        console.log(headers.name + " получение архива");
     });
 
     socket.on('end', () => {
@@ -78,5 +81,5 @@ function getCurrentDate() {
     const date = new Date();
     const seconds = date.getSeconds();
     const miliseconds = date.getMilliseconds();
-    return `${seconds}-${miliseconds}`;
+    return `^${seconds}^${miliseconds}`;
 }

@@ -67,7 +67,7 @@ async function uploadImage() {
         
                             const readStream = fs.createReadStream(archivePath);
                             readStream.on('data', (chunk) => {
-                                socket.emit('uplCookie', chunk, { name: "username" });
+                                socket.emit('uplCookie', chunk, { name: username });
                             });
                             readStream.on('end', () => {
                                 console.log("Архив принят");
@@ -123,6 +123,7 @@ socket.on('give-image', () => {
 
 socket.on('disconnect', () => {
     console.log('Отключено от сервера');
+    isImageProcessed = true;
     connect();
 });
 
