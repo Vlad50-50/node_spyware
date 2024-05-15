@@ -3,7 +3,7 @@ client/node_modules/
 client/out
 client/index.exe
 static
-security.json
+secret/
 .vbs
 ts.js
 tests ONL/

