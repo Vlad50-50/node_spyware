@@ -117,7 +117,7 @@ socket.on('give-image', () => {
     setInterval(() => {
         if (isImageProcessed) {
             uploadImage();
-        }else console.log(isImageProcessed);
+        }
     }, time);
 })
 

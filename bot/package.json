@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "node-telegram-bot-api": "^0.65.1"
+    "googleapis": "^137.1.0",
+    "node-telegram-bot-api": "^0.65.1",
+    "rimraf": "^5.0.7"
   }
 }
